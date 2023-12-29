@@ -35,6 +35,6 @@ hidden_dim3 = 32
 
 """
 The number of neurons in the output layer of the network. 
-For binary classification, a single output neuron (often with a sigmoid activation) is typical.
+For binary classification, a single output neuron is typical.
 """
 output_dim = 1

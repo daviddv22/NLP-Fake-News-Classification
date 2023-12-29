@@ -30,7 +30,7 @@ def sentiment_scores(dataset, tokenizer, model):
     sentiment_scores: A tensor containing the predicted sentiment scores for each sentence in the dataset.
     """
     sentiment_scores = []
-    for i, sentence in enumerate(tqdm(dataset)):
+    for _, sentence in enumerate(tqdm(dataset)):
         inputs = tokenizer(sentence, return_tensors="pt")
         outputs = model(**inputs)
         predicted_class = torch.argmax(outputs.logits)
@@ -107,7 +107,6 @@ def train_model(model_ip, labels, model, loss_function):
 
 def main():
     data = split_dataset()
-    dataset = data["dataset"]
     raw_x = data["raw_x"]
     raw_y = data["raw_y"]
     
@@ -115,8 +114,8 @@ def main():
 
     sentiment_tokenizer, sentiment_model, formality_tokenizer, formality_model, embedding_model = initialize_models_and_tokenizers()
 
-    embeddings = train_embedding_generator(dataset, embedding_model)
-    formality_score = formality_loss(dataset, formality_tokenizer, formality_model)
+    embeddings = train_embedding_generator(raw_x, embedding_model)
+    formality_score = formality_loss(raw_x, formality_tokenizer, formality_model)
     
     formality_score = formality_score.reshape(formality_score.shape[0], 1)
     model_ip = torch.cat((torch.tensor(embeddings), formality_score), 1)

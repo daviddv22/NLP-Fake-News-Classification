@@ -9,7 +9,7 @@ class MLP(nn.Module):
 
     Attributes:
         fc1, fc2, fc3, fc4 (nn.Linear): Fully connected layers.
-        relu1, relu2, relu3, relu4 (nn.SiLU): Activation functions for each hidden layer.
+        silu1, silu2, silu3, silu4 (nn.SiLU): Activation functions for each hidden layer.
         layernorm (nn.LayerNorm): Layer normalization for hidden layer 1.
         dropout, dropout2 (nn.Dropout): Dropout layers for regularization.
         sigmoid (nn.Sigmoid): Activation function for the output layer.
