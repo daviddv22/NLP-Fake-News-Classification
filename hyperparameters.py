@@ -1,35 +1,40 @@
 """
-Number of epochs. If you experiment with more complex networks you
-might need to increase this. Likewise if you add regularization that
-slows training.
+Number of epochs determines the number of times the entire training dataset is passed through the network.
+Adjusted based on network complexity and observed training performance.
 """
-num_epochs = 1000
+num_epochs = 25
 
 """
-A critical parameter that can dramatically affect whether training
-succeeds or fails. The value for this depends significantly on which
-optimizer is used. Refer to the default learning rate parameter
+Initial learning rate sets the step size at the start of training. 
+Adjusted based on network complexity and observed training performance.
 """
-learning_rate = .0002
+inital_learning_rate = 0.025
 
 """
-Beta_1 is the first hyperparameter for the Adam optimizer.
+Decay rate for the learning rate, determining how quickly the learning rate decreases during training. 
+A higher decay rate reduces the learning rate more rapidly. 
+Adjusted this parameter to control the convergence speed of the training process.
 """
-beta_1 = .99
+decay_rate = 2.2
 
 """
-epsilon for the Adam optimizer.
+Input dimension specifies the size of the input features. 
+Matches the number of features in your dataset. 
 """
-epsilon = 1e-1
+input_dim = 385
 
 """
-A critical parameter for style transfer. The value for this will determine 
-how much the generated image is "influenced" by the CONTENT image.
+Dimensions of hidden layers in the network, representing the capacity of the network to learn complex representations. 
+Choose sizes based on the complexity of the task and the amount of data. 
+Balance between sufficient capacity for learning and avoiding overfitting.
 """
-alpha = .05
+hidden_dim = 256
+hidden_dim1 = 128
+hidden_dim2 = 64
+hidden_dim3 = 32
 
 """
-A critical parameter for style transfer. The value for this will determine 
-how much the generated image is "influenced" by the STYLE image.
+The number of neurons in the output layer of the network. 
+For binary classification, a single output neuron (often with a sigmoid activation) is typical.
 """
-beta = 5
+output_dim = 1

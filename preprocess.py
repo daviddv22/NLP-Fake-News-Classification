@@ -1,64 +1,98 @@
 from datasets import load_dataset
-# import the tokenizer used in splitting the dataset
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 import json
+import logging
 
-# save the dataset to a file to be used in other files
-# would be nice to save as something like a json file
-def split_dataset():
-    # load the dataset from the file
-    
-    dataset = load_dataset("liar")
+# Constants
+DATASET_NAME = "liar"
+TEST_SIZE = 0.2
+NUM_WORDS = 100000
+OOV_TOKEN = "<OOV>"
+DATA_FILE = "data.json"
 
-    #select only the columns we need
-    dataset = dataset.select_columns(["label", "statement"]) 
+logging.basicConfig(level=logging.INFO)
 
-    # split the dataset into train and test manually
-    data_split = dataset["train"].train_test_split(test_size=0.2, shuffle=True)
+def split_dataset() -> dict:
+    """
+    Splits the dataset into training and testing sets, tokenizes and pads the statements,
+    and saves the processed data to a JSON file.
 
-    # create a new dataset with the train and test datasets
-    train_x = data_split["train"]["statement"]
-    train_y_ful = data_split["train"]["label"]
-    # label 0-1: 0 false 1 true
-    train_y = [0 if label <= 2 else 1 for label in train_y_ful]
-    
-    test_x = data_split["test"]["statement"]
-    test_y_ful = data_split["test"]["label"]
-    test_y = [0 if label <= 2 else 1 for label in test_y_ful]
+    Returns:
+        dict: A dictionary containing the dataset, training data, test data, raw training, 
+              and raw testing statements and labels.
+    """
+    try:
+        logging.info("Loading dataset...")
+        dataset = load_dataset(DATASET_NAME).select_columns(["label", "statement"])
+        data_split = dataset["train"].train_test_split(test_size=TEST_SIZE, shuffle=True)
 
-    # tokenize the sentences into tensors
-    raw_x = train_x
-    raw_y = train_y
-    raw_test_x = test_x
-    raw_test_y = test_y
-    tokenizer = Tokenizer(num_words=100000, oov_token="<OOV>")
-    tokenizer.fit_on_texts(train_x)
-    train_x = tokenizer.texts_to_sequences(train_x)
-    test_x = tokenizer.texts_to_sequences(test_x)
+        train_x, train_y = preprocess_data(data_split["train"])
+        test_x, test_y = preprocess_data(data_split["test"])
 
-    # pad the tensors to the same length
-    train_x = pad_sequences(train_x, padding="post")
-    test_x = pad_sequences(test_x, padding="post")
+        raw_x = data_split["train"]["statement"]
+        raw_y = [0 if label <= 2 else 1 for label in data_split["train"]["label"]]
 
-    # reshape the tensors to be used in the model
-    train_x = train_x.reshape(train_x.shape[0], train_x.shape[1], 1)
-    test_x = test_x.reshape(test_x.shape[0], test_x.shape[1], 1)
+        raw_test_x = data_split["test"]["statement"]
+        raw_test_y = [0 if label <= 2 else 1 for label in data_split["test"]["label"]]
 
-    # save the data to a JSON file
+        save_data_to_file(train_x, train_y, test_x, test_y)
+
+        return {
+            "dataset": dataset, 
+            "train_x": train_x, 
+            "train_y": train_y, 
+            "test_x": test_x, 
+            "test_y": test_y,
+            "raw_x": raw_x,
+            "raw_y": raw_y,
+            "raw_test_x": raw_test_x,
+            "raw_test_y": raw_test_y
+        }
+
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+        raise
+
+def preprocess_data(data_subset):
+    """
+    Tokenizes and pads the statements in the given data subset.
+
+    Args:
+        data_subset (Dataset): A subset of the dataset (train or test).
+
+    Returns:
+        tuple: Tokenized and padded statements (x) and corresponding labels (y).
+    """
+    x = data_subset["statement"]
+    y = [0 if label <= 2 else 1 for label in data_subset["label"]]
+
+    tokenizer = Tokenizer(num_words=NUM_WORDS, oov_token=OOV_TOKEN)
+    tokenizer.fit_on_texts(x)
+    x = tokenizer.texts_to_sequences(x)
+    x = pad_sequences(x, padding="post")
+
+    return x, y
+
+def save_data_to_file(train_x, train_y, test_x, test_y):
+    """
+    Saves the processed training and testing data to a JSON file.
+
+    Args:
+        train_x (list): Processed training statements.
+        train_y (list): Training labels.
+        test_x (list): Processed testing statements.
+        test_y (list): Testing labels.
+    """
     data = {
         "train_x": train_x.tolist(),
         "train_y": train_y,
         "test_x": test_x.tolist(),
-        "test_y": test_y,
-        "raw_x": raw_x,
-        "raw_y": raw_y
+        "test_y": test_y
     }
-    with open("data.json", "w") as f:
+    with open(DATA_FILE, "w") as f:
         json.dump(data, f)
+        logging.info(f"Data saved to {DATA_FILE}")
 
-    # return the data
-    return dataset, train_x, train_y, test_x, test_y, raw_x, raw_y, raw_test_x, raw_test_y
-
-
-
+if __name__ == "__main__":
+    split_dataset()
